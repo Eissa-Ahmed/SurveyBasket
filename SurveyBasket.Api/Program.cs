@@ -1,14 +1,6 @@
-using Scalar.AspNetCore;
-using SurveyBasket.Api.Services;
-
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
-builder.Services.AddControllers();
-builder.Services.AddOpenApi();
-
-builder.Services.AddScoped<IPollServices, PollServices>();
+builder.Services.ApplyDependencyInjection();
 
 var app = builder.Build();
 
