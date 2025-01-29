@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 
 namespace SurveyBasket.Api.Controllers;
 
@@ -17,6 +18,8 @@ public class PollsController(IPollServices pollServices) : ControllerBase
 
     }
 
+    //[DisableCors]
+    [EnableCors("AllowAll2")]
     [HttpGet("{id}")]
     public async Task<IActionResult> Get([FromRoute] int id, CancellationToken cancellationToken = default)
     {

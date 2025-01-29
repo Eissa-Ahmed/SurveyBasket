@@ -25,12 +25,28 @@ public static class DependencyInjection
              .AddIdentityConfig()
              .AddSqlServerConfig(configuration)
              .AddMapsterConfig()
+             .AddCorsConfig()
              .AddAuthenticationConfig(configuration);
 
 
 
         return services;
     }
+
+    private static IServiceCollection AddCorsConfig(this IServiceCollection services)
+    {
+        /*services
+            .AddCors(options =>
+            {
+                options.AddPolicy("AllowAll1", builder => builder.AllowAnyHeader().WithMethods("GET", "POST", "PUT", "DELETE").AllowAnyOrigin());
+                options.AddPolicy("AllowAll2", builder => builder.AllowAnyHeader().WithMethods("GET", "POST", "PUT", "DELETE").AllowAnyOrigin());
+
+            });*/
+
+        services.AddCors(options => options.AddDefaultPolicy(builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
+        return services;
+    }
+
     private static IServiceCollection AddIdentityConfig(this IServiceCollection services)
     {
         services
