@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.OpenApi.Models;
 using SurveyBasket.Api.Middlewares;
 
 namespace SurveyBasket.Api;
@@ -27,6 +28,7 @@ public static class DependencyInjection
              .AddDependencyInjectionConfig()
              .AddIdentityConfig()
              .AddSqlServerConfig(configuration)
+             .AddSwaggerConfig(configuration)
              .AddMapsterConfig()
              .AddCorsConfig()
              .AddAuthenticationConfig(configuration);
@@ -85,6 +87,7 @@ public static class DependencyInjection
 
     private static IServiceCollection AddDependencyInjectionConfig(this IServiceCollection services)
     {
+        services.AddScoped<IQuestionServices, QuestionServices>();
         services.AddScoped<IJwtProvider, JwtProvider>();
         services.AddScoped<IAuthServices, AuthServices>();
         services.AddScoped<IPollServices, PollServices>();
@@ -117,4 +120,39 @@ public static class DependencyInjection
         return services;
     }
 
+    private static IServiceCollection AddSwaggerConfig(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddSwaggerGen(c =>
+        {
+            c.SwaggerDoc("v1", new OpenApiInfo { Title = "API v1", Version = "v1.0", Description = "API v1" });
+            c.EnableAnnotations();
+
+            c.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, new OpenApiSecurityScheme
+            {
+                Description = "JWT Authorization header using the Bearer scheme (Example: 'Bearer ........')",
+                Name = "Authorization",
+                In = ParameterLocation.Header,
+                Scheme = JwtBearerDefaults.AuthenticationScheme
+            });
+            c.AddSecurityRequirement(new OpenApiSecurityRequirement
+             {
+                 {
+                     new OpenApiSecurityScheme
+                     {
+                         Reference = new OpenApiReference
+                         {
+                             Type = ReferenceType.SecurityScheme,
+                             Id = JwtBearerDefaults.AuthenticationScheme
+                         },
+                         Scheme = "oauth2",
+                         Name = "Bearer",
+                         In = ParameterLocation.Header
+                     },
+                     new string[] { }
+                 }
+             });
+        });
+
+        return services;
+    }
 }
