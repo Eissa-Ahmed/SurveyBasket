@@ -1,45 +1,62 @@
 ﻿
+
 namespace SurveyBasket.Api.Services;
 
-public class PollServices : IPollServices
+public class PollServices(ApplicationDbContext _context) : IPollServices
 {
-    private static readonly List<Poll> _polls =
-        [
-            new Poll {Id = 1,Title = "What is your name?" , Description = "Enter Your Name."},
-            new Poll {Id = 2,Title = "What is your age?" , Description = "Enter Your Age."},
-            new Poll {Id = 3,Title = "What is your anything?" , Description = "Enter Your Anything."},
-        ];
 
-    public List<Poll> GetAll() => _polls;
-
-    public Poll? Get(int id) => _polls.SingleOrDefault(i => i.Id == id);
-
-    public Poll Add(Poll poll)
+    public async Task<AppResponse<List<PollResponse>>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        poll.Id = _polls.Count + 1;
-        _polls.Add(poll);
-        return poll;
+        var polls = await _context.Polls.AsNoTracking().ToListAsync(cancellationToken);
+        return AppResponse.Success(polls.Adapt<List<PollResponse>>().ToList(), SharedMessage.Success);
     }
 
-    public bool Update(int id, Poll poll)
+    public async Task<AppResponse<PollResponse>> GetAsync(int id, CancellationToken cancellationToken = default)
     {
-        var currentPoll = _polls.SingleOrDefault(i => i.Id == id);
-        if (currentPoll is null)
-            return false;
+        var poll = await _context.Polls.FindAsync(id, cancellationToken);
+        if (poll is null)
+            return AppResponse.Failure<PollResponse>(error: PollError.POLL_NOT_FOUND);
 
-        currentPoll.Title = poll.Title;
-        currentPoll.Description = poll.Description;
-
-        return true;
+        return AppResponse.Success(poll.Adapt<PollResponse>(), SharedMessage.Success);
     }
 
-    public bool Delete(int id)
+    public async Task<AppResponse<PollResponse>> AddAsync(Poll poll, CancellationToken cancellationToken = default)
     {
-        var currentPoll = _polls.SingleOrDefault(i => i.Id == id);
-        if (currentPoll is null)
-            return false;
+        bool isExists = await _context.Polls.AnyAsync(x => x.Title == poll.Title, cancellationToken);
+        if (isExists)
+            return AppResponse.Failure<PollResponse>(error: PollError.POLL_ALREADY_EXISTS);
 
-        _polls.Remove(currentPoll);
-        return true;
+        await _context.Polls.AddAsync(poll, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return AppResponse.Success(poll.Adapt<PollResponse>(), SharedMessage.Success);
+    }
+
+    public async Task<AppResponse> UpdateAsync(int id, Poll poll, CancellationToken cancellationToken)
+    {
+        var existing = await _context.Polls.FindAsync(id, cancellationToken);
+        if (existing == null)
+            return AppResponse.Failure(error: PollError.POLL_NOT_FOUND);
+
+        existing.Title = poll.Title;
+        existing.Summary = poll.Summary;
+        existing.IsPublished = poll.IsPublished;
+        existing.StartsAt = poll.StartsAt;
+        existing.EndsAt = poll.EndsAt;
+
+        _context.Polls.Update(existing);
+        await _context.SaveChangesAsync(cancellationToken);
+        return AppResponse.Success(SharedMessage.Success);
+    }
+
+    public async Task<AppResponse> DeleteAsync(int id, CancellationToken cancellationToken)
+    {
+        var poll = await _context.Polls.FindAsync(id, cancellationToken);
+        if (poll == null)
+            return AppResponse.Failure(error: PollError.POLL_NOT_FOUND);
+
+        _context.Polls.Remove(poll);
+        await _context.SaveChangesAsync(cancellationToken);
+        return AppResponse.Success(SharedMessage.Success);
     }
 }

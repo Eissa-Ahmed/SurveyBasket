@@ -1,53 +1,52 @@
-﻿using Mapster;
-using SurveyBasket.Api.Contracts.Poll.Requests;
-using SurveyBasket.Api.Contracts.Poll.Responses;
-using SurveyBasket.Api.Services;
+﻿using Microsoft.AspNetCore.Authorization;
 
 namespace SurveyBasket.Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class PollsController(IPollServices pollServices) : ControllerBase
 {
     private readonly IPollServices _pollServices = pollServices;
 
     [HttpGet]
-    public IActionResult GetAll()
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
-        var polls = _pollServices.GetAll();
-        return Ok(polls.Adapt<List<PollResponse>>());
+        var polls = await _pollServices.GetAllAsync(cancellationToken);
+        return polls.IsSuccess ? Ok(polls) : BadRequest(polls);
+
     }
 
     [HttpGet("{id}")]
-    public IActionResult Get(int id)
+    public async Task<IActionResult> Get([FromRoute] int id, CancellationToken cancellationToken = default)
     {
-        var poll = _pollServices.Get(id);
+        var poll = await _pollServices.GetAsync(id, cancellationToken);
 
-        return poll is null ? NotFound() : Ok(poll.Adapt<PollResponse>());
-
+        return poll.IsSuccess ? Ok(poll) : NotFound(poll);
     }
 
     [HttpPost]
-    public IActionResult Add(CreatePollRequest poll)
+    public async Task<IActionResult> Add([FromBody] CreatePollRequest poll, CancellationToken cancellationToken)
     {
-        var result = _pollServices.Add(poll.Adapt<Poll>());
-
-        return CreatedAtAction(nameof(Get), new { id = result.Id }, result);
+        var response = await _pollServices.AddAsync(poll.Adapt<Poll>(), cancellationToken);
+        return response.IsSuccess
+            ? CreatedAtAction(nameof(Get), new { id = response.Data!.Id }, response)
+            : BadRequest(response);
     }
 
     [HttpPut("{id}")]
-    public IActionResult Update(UpdatePollRequest poll)
+    public async Task<IActionResult> Update([FromRoute] int id, [FromBody] UpdatePollRequest poll, CancellationToken cancellationToken)
     {
-        var isUpdated = _pollServices.Update(poll.Id, poll.Adapt<Poll>());
+        var response = await _pollServices.UpdateAsync(id, poll.Adapt<Poll>(), cancellationToken);
 
-        return isUpdated ? NoContent() : NotFound();
+        return response.IsSuccess ? Ok(response) : NotFound(response);
     }
 
     [HttpDelete("{id}")]
-    public IActionResult Delete(int id)
+    public async Task<IActionResult> Delete([FromRoute] int id, CancellationToken cancellationToken)
     {
-        var IsDeleted = _pollServices.Delete(id);
+        var response = await _pollServices.DeleteAsync(id, cancellationToken);
 
-        return IsDeleted ? NoContent() : NotFound();
+        return response.IsSuccess ? Ok(response) : NotFound(response);
     }
 }
