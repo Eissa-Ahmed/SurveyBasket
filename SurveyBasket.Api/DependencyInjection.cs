@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using SurveyBasket.Api.Middlewares;
 
 namespace SurveyBasket.Api;
 
@@ -10,6 +11,8 @@ public static class DependencyInjection
 
         services.AddControllers();
         services.AddOpenApi();
+        services.AddExceptionHandler<GlobalExceptionHandler>();
+        services.AddProblemDetails();
 
         // Configure JwtSettings
         //services.Configure<JwtSettings>(configuration.GetSection(nameof(JwtSettings)));

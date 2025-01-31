@@ -8,14 +8,14 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    //app.UseSwaggerUI(opt => opt.SwaggerEndpoint("/openapi/v1.json", "v1"));
-    app.MapScalarApiReference();
+    app.UseSwaggerUI(opt => opt.SwaggerEndpoint("/openapi/v1.json", "v1"));
+    //app.MapScalarApiReference();
 }
 
+
+app.UseExceptionHandler();
 app.UseHttpsRedirection();
 
-//app.UseCors("AllowAll1");
-//app.UseCors("AllowAll2");
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();

@@ -11,13 +11,13 @@ public class AuthenticationController(IAuthServices authServices) : ControllerBa
     public async Task<IActionResult> LoginAsync(LoginRequestModel request, CancellationToken cancellationToken)
     {
         var response = await _authServices.LoginAsync(request.Email, request.Password, cancellationToken);
-        return response is null ? BadRequest("Invalid credentials") : Ok(response);
+        return response.IsSuccess ? Ok(response) : BadRequest(response);
     }
 
     [HttpPost("refresh-token")]
     public async Task<IActionResult> RefreshTokenAsync(RefreshTokenRequestModel request, CancellationToken cancellationToken)
     {
         var response = await _authServices.RefreshTokenAsync(request.Token, request.RefreshToken, cancellationToken);
-        return response is null ? BadRequest("Invalid credentials") : Ok(response);
+        return response.IsSuccess ? Ok(response) : BadRequest(response);
     }
 }
