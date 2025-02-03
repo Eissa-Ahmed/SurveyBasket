@@ -10,4 +10,5 @@ public class Poll : AuditableEntity
     public DateOnly EndsAt { get; set; }
 
     public virtual ICollection<Question> Questions { get; set; } = [];
+    public virtual ICollection<Vote> Votes { get; set; } = [];
 }

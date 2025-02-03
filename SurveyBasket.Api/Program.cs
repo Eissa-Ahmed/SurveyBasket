@@ -1,6 +1,15 @@
+
+using Serilog;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.ApplyDependencyInjection(builder.Configuration);
+
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 var app = builder.Build();
 
@@ -16,6 +25,8 @@ if (app.Environment.IsDevelopment())
     //app.UseSwaggerUI(opt => opt.SwaggerEndpoint("/openapi/v1.json", "v1"));
     //app.MapScalarApiReference();
 }
+
+app.UseSerilogRequestLogging();
 
 
 app.UseExceptionHandler();
