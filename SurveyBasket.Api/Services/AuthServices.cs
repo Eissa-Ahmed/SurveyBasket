@@ -8,6 +8,7 @@ public class AuthServices(UserManager<ApplicationUser> userManager, IJwtProvider
 
     public async Task<AppResponse<AuthenticationResponse>> LoginAsync(string email, string password, CancellationToken cancellationToken = default)
     {
+        throw new NotImplementedException("Hello Error.");
         var user = await _userManager.FindByEmailAsync(email);
         if (user == null)
             return AppResponse.Failure<AuthenticationResponse>(error: AuthenticationError.USER_NOT_FOUND);
